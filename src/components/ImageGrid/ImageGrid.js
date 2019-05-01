@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-
+import { connect } from 'react-redux';
 import './styles.css';
-
-const key = '5f96323678d05ff0c4eb264ef184556868e303b32a2db88ecbf15746e6f25e02';
+import { loadImages } from '../../actions';
+import Stats from '../Stats';
 
 class ImageGrid extends Component {
     state = {
@@ -10,17 +10,12 @@ class ImageGrid extends Component {
     };
 
     componentDidMount() {
-        fetch(`https://api.unsplash.com/photos/?client_id=${key}&per_page=28`)
-            .then(res => res.json())
-            .then(images => {
-                this.setState({
-                    images,
-                });
-            });
+        this.props.loadImages();
     }
 
     render() {
-        const { images } = this.state;
+        console.log(this.props);
+        const { images, error, isLoading, loadImages, imageStats } = this.props;
         return (
             <div className="content">
                 <section className="grid">
@@ -31,16 +26,33 @@ class ImageGrid extends Component {
                                 image.height / image.width,
                             )}`}
                         >
+                            <Stats stats={imageStats[image.id]} />
                             <img
                                 src={image.urls.small}
                                 alt={image.user.username}
                             />
                         </div>
                     ))}
+                    <a onClick={this.props.loadImages}>Load More...</a>
                 </section>
+                {error && <div className="error">{JSON.stringify(error)}</div>}
             </div>
         );
     }
 }
 
-export default ImageGrid;
+const mapStateToProps = ({ isLoading, images, error, imageStats }) => ({
+    isLoading,
+    images,
+    error,
+    imageStats,
+});
+const mapDispatchToProps = dispatch => ({
+    loadImages: () => dispatch(loadImages()),
+});
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps,
+    null,
+)(ImageGrid);
